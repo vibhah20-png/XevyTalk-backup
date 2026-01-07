@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TURN Server Test - XevyTalk</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #1a202c;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            transition: border-color 0.2s;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .results h2 {
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .candidate {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            border-left: 3px solid #cbd5e0;
+            word-break: break-all;
+        }
+
+        .candidate.host {
+            border-left-color: #48bb78;
+        }
+
+        .candidate.srflx {
+            border-left-color: #4299e1;
+        }
+
+        .candidate.relay {
+            border-left-color: #ed8936;
+            background: #fffaf0;
+        }
+
+        .candidate-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-right: 8px;
+        }
+
+        .type-host {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .type-srflx {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .type-relay {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #f56565;
+        }
+
+        .status.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border-left: 4px solid #4299e1;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .note {
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #7c4a00;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔌 TURN Server Test</h1>
+        <p class="subtitle">Test your STUN/TURN server configuration for XevyTalk</p>
+
+        <div class="input-group">
+            <label for="iceServers">ICE Servers Configuration (JSON)</label>
+            <textarea id="iceServers" placeholder='[
+  { 
+    "urls": "turn:3.108.166.72:3478?transport=udp",
+    "username": "your-username",
+    "credential": "your-password"
+  }
+]'></textarea>
+        </div>
+
+        <button id="testBtn" onclick="testICE()">🚀 Test ICE Servers</button>
+
+        <div id="results" class="hidden">
+            <div id="status"></div>
+            <div class="results">
+                <h2>ICE Candidates Found:</h2>
+                <div id="candidates"></div>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>💡 What to look for:</strong><br>
+            • <strong>host</strong> candidates = Local network addresses<br>
+            • <strong>srflx</strong> candidates = Public IP via STUN server<br>
+            • <strong>relay</strong> candidates = TURN server is working! ✅<br><br>
+            If you see relay candidates, your TURN server is properly configured.
+        </div>
+    </div>
+
+    <script>
+        // Load default configuration from XevyTalk (Forced TURN Relay Only)
+        const defaultConfig = [
+            {
+                urls: [
+                    'turn:3.108.166.72:3478?transport=udp',
+                    'turn:3.108.166.72:3478?transport=tcp'
+                ],
+                username: 'turnuser',
+                credential: 'StrongTurnPassword123'
+            }
+        ]
+
+        document.getElementById('iceServers').value = JSON.stringify(defaultConfig, null, 2)
+
+        async function testICE() {
+            const resultsDiv = document.getElementById('results')
+            const statusDiv = document.getElementById('status')
+            const candidatesDiv = document.getElementById('candidates')
+            const testBtn = document.getElementById('testBtn')
+
+            // Clear previous results
+            candidatesDiv.innerHTML = ''
+            resultsDiv.classList.remove('hidden')
+            testBtn.disabled = true
+            testBtn.textContent = '🔍 Testing...'
+
+            try {
+                // Parse ICE servers configuration
+                const iceServersText = document.getElementById('iceServers').value
+                const iceServers = JSON.parse(iceServersText)
+
+                statusDiv.innerHTML = '<div class="status info">⏳ Gathering ICE candidates... This may take a few seconds.</div>'
+
+                // Create RTCPeerConnection
+                const pc = new RTCPeerConnection({
+                    iceServers: iceServers,
+                    iceCandidatePoolSize: 10
+                })
+
+                const candidates = []
+                let gatheringComplete = false
+
+                // Listen for ICE candidates
+                pc.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        candidates.push(event.candidate)
+                        displayCandidate(event.candidate)
+                    } else {
+                        gatheringComplete = true
+                        onGatheringComplete(candidates)
+                    }
+                }
+
+                pc.onicegatheringstatechange = () => {
+                    console.log('ICE gathering state:', pc.iceGatheringState)
+                }
+
+                // Create a dummy data channel to trigger ICE gathering
+                pc.createDataChannel('test')
+
+                // Create offer to start ICE gathering
+                const offer = await pc.createOffer()
+                await pc.setLocalDescription(offer)
+
+                // Wait for gathering to complete (with timeout)
+                setTimeout(() => {
+                    if (!gatheringComplete) {
+                        onGatheringComplete(candidates)
+                    }
+                }, 10000) // 10 second timeout
+
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error: ${error.message}</div>`
+                testBtn.disabled = false
+                testBtn.textContent = '🚀 Test ICE Servers'
+            }
+        }
+
+        function displayCandidate(candidate) {
+            const candidatesDiv = document.getElementById('candidates')
+            const candidateStr = candidate.candidate
+
+            // Determine candidate type
+            let type = 'unknown'
+            let typeClass = ''
+            if (candidateStr.includes('typ host')) {
+                type = 'host'
+                typeClass = 'host'
+            } else if (candidateStr.includes('typ srflx')) {
+                type = 'srflx'
+                typeClass = 'srflx'
+            } else if (candidateStr.includes('typ relay')) {
+                type = 'relay'
+                typeClass = 'relay'
+            }
+
+            const div = document.createElement('div')
+            div.className = `candidate ${typeClass}`
+            div.innerHTML = `
+        <span class="candidate-type type-${type}">${type}</span>
+        ${candidateStr}
+      `
+            candidatesDiv.appendChild(div)
+        }
+
+        function onGatheringComplete(candidates) {
+            const statusDiv = document.getElementById('status')
+            const testBtn = document.getElementById('testBtn')
+
+            const hostCount = candidates.filter(c => c.candidate.includes('typ host')).length
+            const srflxCount = candidates.filter(c => c.candidate.includes('typ srflx')).length
+            const relayCount = candidates.filter(c => c.candidate.includes('typ relay')).length
+
+            let statusHTML = ''
+
+            if (relayCount > 0) {
+                statusHTML = `
+          <div class="status success">
+            ✅ <strong>Success!</strong> TURN server is working correctly.<br>
+            Found ${candidates.length} candidates: ${hostCount} host, ${srflxCount} srflx, ${relayCount} relay
+          </div>
+        `
+            } else if (srflxCount > 0) {
+                statusHTML = `
+          <div class="status error">
+            ⚠️ <strong>Warning:</strong> STUN is working but no TURN relay candidates found.<br>
+            Found ${candidates.length} candidates: ${hostCount} host, ${srflxCount} srflx, ${relayCount} relay<br>
+            <small>This means calls may fail when both users are behind restrictive NATs.</small>
+          </div>
+        `
+            } else {
+                statusHTML = `
+          <div class="status error">
+            ❌ <strong>Error:</strong> No STUN or TURN candidates found.<br>
+            Only found ${hostCount} local host candidates.<br>
+            <small>Please check your ICE server configuration.</small>
+          </div>
+        `
+            }
+
+            statusDiv.innerHTML = statusHTML
+            testBtn.disabled = false
+            testBtn.textContent = '🚀 Test ICE Servers'
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "chat-bot-electron",
+  "version": "0.1.0",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "dev": "wait-on http://13.205.101.250:5173 && electron .",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "wait-on": "^7.2.0"
+  }
+}
